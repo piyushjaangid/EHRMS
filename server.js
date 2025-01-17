@@ -1,60 +1,30 @@
 import express from "express";
-import mongoose from "mongoose";
+import path from "path";
 import dotenv from "dotenv";
 
-// Load environment variables from the .env file
+// Load environment variables
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Middleware to parse JSON
+// Middleware to parse JSON requests
 app.use(express.json());
 
-// Function to connect to MongoDB
-const connectDB = async () => {
-    try {
-        const conn = await mongoose.connect(process.env.MONGO_URI); // Deprecated options removed
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
-    } catch (error) {
-        console.error("Database connection failed:", error.message);
-        process.exit(1); // Exit the application if the database connection fails
-    }
-};
+// Serve static files from the "public" folder
+app.use(express.static(path.join(path.resolve(), "public")));
 
-// Basic Route
-app.get("/", (req, res) => {
-    res.status(200).send("Server is ready and running smoothly!");
+// Example API endpoint
+app.get("/api", (req, res) => {
+  res.json({ message: "Welcome to the E-HRMS API!" });
 });
 
-// Catch-All Route for 404 Errors
-app.use((req, res) => {
-    res.status(404).send({ message: "Route not found" });
-});
-
-// Global Error Handler Middleware
-app.use((err, req, res, next) => {
-    console.error("Unhandled error:", err.stack);
-    res.status(500).send({
-        message: "An unexpected error occurred on the server.",
-        error: err.message || "Internal Server Error",
-    });
+// Fallback route to serve `index.html` for undefined routes
+app.get("*", (req, res) => {
+  res.sendFile(path.join(path.resolve(), "public", "index.html"));
 });
 
 // Start the server
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, async () => {
-    console.log(`Server started at http://localhost:${PORT}`);
-    await connectDB(); // Connect to the database after the server starts
-});
-
-// Handle Uncaught Exceptions
-process.on("uncaughtException", (error) => {
-    console.error("Uncaught Exception:", error.stack || error);
-    process.exit(1); // Forcefully exit the process
-});
-
-// Handle Unhandled Promise Rejections
-process.on("unhandledRejection", (reason, promise) => {
-    console.error("Unhandled Rejection at:", promise, "reason:", reason);
-    process.exit(1); // Forcefully exit the process
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
