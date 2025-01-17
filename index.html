@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-HRMS - Human Resource Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>E-HRMS</h1>
+    <nav>
+      <a href="#attendance">Attendance</a>
+      <a href="#leave">Leave</a>
+      <a href="#payroll">Payroll</a>
+      <a href="#employee-database">Employee Database</a>
+      <a href="#reports">Reports</a>
+      <a href="#self-service">Self-Service</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Employee Attendance Management -->
+    <section id="attendance">
+      <h2>Employee Attendance Management</h2>
+      <button onclick="clockIn()">Clock In</button>
+      <button onclick="clockOut()">Clock Out</button>
+      <p id="attendance-status"></p>
+    </section>
+
+    <!-- Leave Management -->
+    <section id="leave">
+      <h2>Leave Management</h2>
+      <form id="leave-form">
+        <label for="leave-type">Leave Type:</label>
+        <select id="leave-type" required>
+          <option value="annual">Annual Leave</option>
+          <option value="sick">Sick Leave</option>
+          <option value="casual">Casual Leave</option>
+        </select>
+        <label for="leave-dates">Leave Dates:</label>
+        <input type="date" id="leave-start" required>
+        <input type="date" id="leave-end" required>
+        <button type="submit">Submit Leave Application</button>
+      </form>
+      <p id="leave-status"></p>
+    </section>
+
+    <!-- Payroll Management -->
+    <section id="payroll">
+      <h2>Payroll Management</h2>
+      <button onclick="generatePayslip()">Generate Payslip</button>
+      <div id="payslip"></div>
+    </section>
+
+    <!-- Employee Database Management -->
+    <section id="employee-database">
+      <h2>Employee Database Management</h2>
+      <div id="employee-profile">
+        <p><strong>Name:</strong> John Doe</p>
+        <p><strong>Position:</strong> Software Engineer</p>
+        <p><strong>Department:</strong> IT</p>
+        <p><strong>Bank Account:</strong> 1234-5678-9012</p>
+      </div>
+    </section>
+
+    <!-- Reports and Analytics -->
+    <section id="reports">
+      <h2>Reports and Analytics</h2>
+      <button onclick="generateReport()">Generate Report</button>
+      <div id="report-output"></div>
+    </section>
+
+    <!-- Self-Service Portal -->
+    <section id="self-service">
+      <h2>Employee Self-Service Portal</h2>
+      <button onclick="viewPayslip()">View Payslip</button>
+      <button onclick="applyLeave()">Apply for Leave</button>
+      <div id="self-service-output"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 E-HRMS System. All rights reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
