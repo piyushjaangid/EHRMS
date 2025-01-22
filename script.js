@@ -1,46 +1,32 @@
-// Attendance Management
-function clockIn() {
-    const now = new Date();
-    document.getElementById("attendance-status").textContent = `Clocked in at ${now.toLocaleTimeString()}`;
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+dotenv.config();
+const app = express();
+
+// Middleware to parse JSON
+app.use(express.json());
+
+// MongoDB Connection
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error("Database connection failed:", error.message);
+    process.exit(1);
   }
-  
-  function clockOut() {
-    const now = new Date();
-    document.getElementById("attendance-status").textContent = `Clocked out at ${now.toLocaleTimeString()}`;
-  }
-  
-  // Leave Management
-  document.getElementById("leave-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const leaveType = document.getElementById("leave-type").value;
-    const leaveStart = document.getElementById("leave-start").value;
-    const leaveEnd = document.getElementById("leave-end").value;
-  
-    document.getElementById("leave-status").textContent = `Leave application submitted for ${leaveType} from ${leaveStart} to ${leaveEnd}.`;
-  });
-  
-  // Payroll Management
-  function generatePayslip() {
-    const payslip = `
-      <h3>Payslip</h3>
-      <p><strong>Name:</strong> John Doe</p>
-      <p><strong>Position:</strong> Software Engineer</p>
-      <p><strong>Salary:</strong> $5,000</p>
-    `;
-    document.getElementById("payslip").innerHTML = payslip;
-  }
-  
-  // Reports and Analytics
-  function generateReport() {
-    document.getElementById("report-output").textContent = "Attendance Report: All employees present today.";
-  }
-  
-  // Self-Service Portal
-  function viewPayslip() {
-    document.getElementById("self-service-output").textContent = "Payslip for January 2025: $5,000.";
-  }
-  
-  function applyLeave() {
-    document.getElementById("self-service-output").textContent = "Redirecting to Leave Application...";
-  }
-  
+};
+
+// Basic Route
+app.get("/", (req, res) => {
+  res.send("Server is running!");
+});
+
+// Start the Server
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, async () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+  await connectDB();
+});
