@@ -1,15 +1,18 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Resolve __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
 
 // Middleware to parse JSON
 app.use(express.json());
-
-// Serve static files from the "public" directory
-app.use(express.static("public"));
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -22,9 +25,12 @@ const connectDB = async () => {
   }
 };
 
-// Catch-All Route for SPA (Single Page Applications)
-app.get("*", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+// Serve Static Files
+app.use(express.static(path.join(__dirname))); // Serve static files from the project root
+
+// Serve index.html for the root URL
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html")); // Send index.html
 });
 
 // Start the Server
