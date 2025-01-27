@@ -7,11 +7,6 @@
   "scripts": {
     "start": "node script.js",
     "dev": "nodemon script.js"
-    "build": "react-scripts build"
-    "build": "tsc"
-    "dev": "nodemon script.js",
-    "build-react": "react-scripts build",
-    "build-ts": "tsc"
   },
   "keywords": ["backend", "express", "mongoose", "api"],
   "author": "Your Name",
