@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import winston from "winston";
+import "winston-daily-rotate-file";
 
 dotenv.config();
 
@@ -10,6 +12,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Setup Winston Logger
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.printf(
+      ({ timestamp, level, message }) => `${timestamp} [${level.toUpperCase()}]: ${message}`
+    )
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.DailyRotateFile({
+      filename: "logs/server-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      maxSize: "20m",
+      maxFiles: "14d",
+    }),
+  ],
+});
 
 // Middleware
 app.use(express.json());
@@ -21,9 +43,9 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    logger.info(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error("Database connection failed:", error.message);
+    logger.error(`MongoDB Connection Failed: ${error.message}`);
     process.exit(1); // Exit with failure
   }
 };
@@ -52,6 +74,7 @@ app.get("/api/status", async (req, res) => {
   const allSystemsOperational =
     mongoStatus === 1 ? "All systems are operational" : "Issues detected";
 
+  logger.info("Status endpoint accessed");
   res.status(200).json({
     server: "Server is running",
     render: renderStatus,
@@ -66,18 +89,20 @@ app.post("/api/test-record", async (req, res) => {
     const { name, email } = req.body;
 
     if (!name || !email) {
+      logger.warn("Test record creation failed: Missing name or email");
       return res.status(400).json({ message: "Name and email are required" });
     }
 
     const newRecord = new SampleModel({ name, email });
     await newRecord.save();
 
+    logger.info("Test record created successfully");
     res.status(201).json({
       message: "Record created successfully",
       record: newRecord,
     });
   } catch (error) {
-    console.error("Error creating record:", error.message);
+    logger.error(`Error creating record: ${error.message}`);
     res.status(500).json({
       message: "Failed to create record",
       error: error.message,
@@ -90,17 +115,19 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Serve index.html for the root URL
 app.get("/", (req, res) => {
+  logger.info("Root endpoint accessed");
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // 404 Fallback for Undefined Routes
 app.use((req, res) => {
+  logger.warn(`404 Error - Route not found: ${req.originalUrl}`);
   res.status(404).json({ error: "Route not found" });
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(`Unhandled Error: ${err.message}`);
   res.status(500).json({ error: "Internal Server Error" });
 });
 
@@ -109,9 +136,9 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, async () => {
   try {
     await connectDB();
-    console.log(`Server running at http://localhost:${PORT}`);
+    logger.info(`Server running at http://localhost:${PORT}`);
   } catch (error) {
-    console.error("Server startup error:", error.message);
+    logger.error(`Server startup error: ${error.message}`);
     process.exit(1);
   }
 });
