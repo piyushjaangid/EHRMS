@@ -1,44 +1,84 @@
+// Utility: Terminal Log Function
+function logToTerminal(message, isError = false) {
+  const terminalLog = document.getElementById("terminal-log");
+  const line = document.createElement("div");
+
+  const timestamp = new Date().toLocaleTimeString();
+  line.textContent = `[${timestamp}] ${isError ? "ERROR: " : ""}${message}`;
+  line.style.color = isError ? "red" : "green";
+
+  terminalLog.appendChild(line);
+  terminalLog.scrollTop = terminalLog.scrollHeight; // Auto-scroll to the latest log
+}
+
 // Attendance Management
 function clockIn() {
-  const now = new Date();
-  document.getElementById("attendance-status").textContent = `Clocked in at ${now.toLocaleTimeString()}`;
+  try {
+    const now = new Date();
+    const status = `Clocked in at ${now.toLocaleTimeString()}`;
+    document.getElementById("attendance-status").textContent = status;
+    logToTerminal(status);
+  } catch (error) {
+    logToTerminal("Failed to clock in: " + error.message, true);
+  }
 }
 
 function clockOut() {
-  const now = new Date();
-  document.getElementById("attendance-status").textContent = `Clocked out at ${now.toLocaleTimeString()}`;
+  try {
+    const now = new Date();
+    const status = `Clocked out at ${now.toLocaleTimeString()}`;
+    document.getElementById("attendance-status").textContent = status;
+    logToTerminal(status);
+  } catch (error) {
+    logToTerminal("Failed to clock out: " + error.message, true);
+  }
 }
 
 // Leave Management
 document.getElementById("leave-form").addEventListener("submit", (event) => {
   event.preventDefault(); // Prevent page reload
 
-  const leaveType = document.getElementById("leave-type").value;
-  const leaveStart = document.getElementById("leave-start").value;
-  const leaveEnd = document.getElementById("leave-end").value;
+  try {
+    const leaveType = document.getElementById("leave-type").value;
+    const leaveStart = document.getElementById("leave-start").value;
+    const leaveEnd = document.getElementById("leave-end").value;
 
-  // Validate inputs
-  if (!leaveType || !leaveStart || !leaveEnd) {
-    document.getElementById("leave-status").textContent = "Please fill out all fields before submitting.";
-    return;
+    // Validate inputs
+    if (!leaveType || !leaveStart || !leaveEnd) {
+      const error = "Please fill out all fields before submitting.";
+      document.getElementById("leave-status").textContent = error;
+      logToTerminal(error, true);
+      return;
+    }
+
+    const startDate = new Date(leaveStart);
+    const endDate = new Date(leaveEnd);
+
+    if (startDate > endDate) {
+      const error = "Leave start date cannot be after the end date.";
+      document.getElementById("leave-status").textContent = error;
+      logToTerminal(error, true);
+      return;
+    }
+
+    // Display confirmation message
+    const success = `Leave application submitted for ${leaveType} from ${leaveStart} to ${leaveEnd}.`;
+    document.getElementById("leave-status").textContent = success;
+    logToTerminal(success);
+  } catch (error) {
+    logToTerminal("Failed to submit leave application: " + error.message, true);
   }
-
-  const startDate = new Date(leaveStart);
-  const endDate = new Date(leaveEnd);
-
-  if (startDate > endDate) {
-    document.getElementById("leave-status").textContent = "Leave start date cannot be after the end date.";
-    return;
-  }
-
-  // Display confirmation message
-  document.getElementById("leave-status").textContent = `Leave application submitted for ${leaveType} from ${leaveStart} to ${leaveEnd}.`;
 });
 
 // Utility: Reset attendance or leave status
 function resetStatus() {
-  document.getElementById("attendance-status").textContent = "";
-  document.getElementById("leave-status").textContent = "";
+  try {
+    document.getElementById("attendance-status").textContent = "";
+    document.getElementById("leave-status").textContent = "";
+    logToTerminal("Status reset successfully.");
+  } catch (error) {
+    logToTerminal("Failed to reset status: " + error.message, true);
+  }
 }
 
 // Example DOM elements for testing
@@ -73,4 +113,9 @@ document.body.innerHTML = `
   </div>
 
   <button onclick="resetStatus()">Reset Status</button>
+
+  <div id="terminal" style="margin-top: 20px; background-color: black; color: white; font-family: monospace; padding: 10px; height: 200px; overflow-y: auto;">
+    <h3>Terminal Logs</h3>
+    <div id="terminal-log" style="overflow-y: auto; max-height: 150px;"></div>
+  </div>
 `;
