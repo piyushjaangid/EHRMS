@@ -24,40 +24,64 @@ const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error("Database connection failed:", error.message);
-    process.exit(1); // Exit the process with failure
+    process.exit(1); // Exit with failure
   }
 };
 
-// Route to Check MongoDB Status
-app.get("/api/db-status", (req, res) => {
-  const connectionStatus = mongoose.connection.readyState;
-  const statuses = {
-    0: "Disconnected",
-    1: "Connected",
-    2: "Connecting",
-    3: "Disconnecting",
+// Define a sample Mongoose schema and model
+const SampleSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+});
+const SampleModel = mongoose.model("Sample", SampleSchema);
+
+// Health Check Endpoint
+app.get("/api/status", async (req, res) => {
+  const mongoStatus = mongoose.connection.readyState;
+  const renderStatus = "Render service is running";
+
+  const statusMessages = {
+    0: "MongoDB Disconnected",
+    1: "MongoDB Connected",
+    2: "MongoDB Connecting",
+    3: "MongoDB Disconnecting",
   };
-  const message = statuses[connectionStatus] || "Unknown State";
-  const statusCode = connectionStatus === 1 ? 200 : 500;
-  res.status(statusCode).json({ message });
+
+  const mongoMessage = statusMessages[mongoStatus] || "Unknown MongoDB State";
+
+  const allSystemsOperational =
+    mongoStatus === 1 ? "All systems are operational" : "Issues detected";
+
+  res.status(200).json({
+    server: "Server is running",
+    render: renderStatus,
+    mongo: mongoMessage,
+    status: allSystemsOperational,
+  });
 });
 
-// Attendance Management API
-app.post("/api/clock-in", (req, res) => {
+// Test Record Creation Endpoint
+app.post("/api/test-record", async (req, res) => {
   try {
-    const now = new Date();
-    res.status(200).json({ status: "Clocked In", time: now.toLocaleTimeString() });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to clock in", error: error.message });
-  }
-});
+    const { name, email } = req.body;
 
-app.post("/api/clock-out", (req, res) => {
-  try {
-    const now = new Date();
-    res.status(200).json({ status: "Clocked Out", time: now.toLocaleTimeString() });
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and email are required" });
+    }
+
+    const newRecord = new SampleModel({ name, email });
+    await newRecord.save();
+
+    res.status(201).json({
+      message: "Record created successfully",
+      record: newRecord,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Failed to clock out", error: error.message });
+    console.error("Error creating record:", error.message);
+    res.status(500).json({
+      message: "Failed to create record",
+      error: error.message,
+    });
   }
 });
 
