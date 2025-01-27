@@ -3,89 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-HRMS - Human Resource Management System</title>
+  <title>E-HRMS - System Status and Test</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+
+    header {
+      background: #007bff;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+
+    section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      background: #007bff;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .status-bar {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .info {
+      background-color: #cce5ff;
+      color: #004085;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>E-HRMS</h1>
-    <nav aria-label="Main Navigation">
-      <a href="#attendance">Attendance</a>
-      <a href="#leave">Leave</a>
-      <a href="#payroll">Payroll</a>
-      <a href="#employee-database">Employee Database</a>
-      <a href="#reports">Reports</a>
-      <a href="#self-service">Self-Service</a>
-    </nav>
+    <h1>E-HRMS - System Status and Testing</h1>
   </header>
 
-  <main>
-    <!-- Employee Attendance Management -->
-    <section id="attendance">
-      <h2>Employee Attendance Management</h2>
-      <button onclick="clockIn()">Clock In</button>
-      <button onclick="clockOut()">Clock Out</button>
-      <p id="attendance-status" role="status" aria-live="polite"></p>
-    </section>
+  <!-- Status Bar -->
+  <section>
+    <h2>Status Check</h2>
+    <button onclick="checkStatus()">Check System Status</button>
+    <div id="status-bar" class="status-bar hidden"></div>
+  </section>
 
-    <!-- Leave Management -->
-    <section id="leave">
-      <h2>Leave Management</h2>
-      <form id="leave-form">
-        <label for="leave-type">Leave Type:</label>
-        <select id="leave-type" required aria-required="true">
-          <option value="">-- Select Leave Type --</option>
-          <option value="annual">Annual Leave</option>
-          <option value="sick">Sick Leave</option>
-          <option value="casual">Casual Leave</option>
-        </select>
-        <label for="leave-dates">Leave Dates:</label>
-        <input type="date" id="leave-start" required aria-required="true">
-        <input type="date" id="leave-end" required aria-required="true">
-        <button type="submit">Submit Leave Application</button>
-      </form>
-      <p id="leave-status" role="status" aria-live="polite"></p>
-    </section>
+  <!-- File Upload -->
+  <section>
+    <h2>File Upload</h2>
+    <form id="file-upload-form" enctype="multipart/form-data">
+      <label for="file-upload">Choose a file to upload:</label>
+      <input type="file" id="file-upload" name="file" accept=".csv, .xlsx, .txt"><br><br>
+      <button type="submit">Upload File</button>
+    </form>
+    <div id="upload-status" class="status-bar hidden"></div>
+  </section>
 
-    <!-- Payroll Management -->
-    <section id="payroll">
-      <h2>Payroll Management</h2>
-      <button onclick="generatePayslip()">Generate Payslip</button>
-      <div id="payslip" role="region" aria-label="Generated Payslip"></div>
-    </section>
+  <!-- Test Record Submission -->
+  <section>
+    <h2>Submit a Test Record</h2>
+    <form id="test-record-form">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required><br><br>
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required><br><br>
+      <button type="submit">Submit Record</button>
+    </form>
+    <div id="record-status" class="status-bar hidden"></div>
+  </section>
 
-    <!-- Employee Database Management -->
-    <section id="employee-database">
-      <h2>Employee Database Management</h2>
-      <div id="employee-profile" role="region" aria-labelledby="employee-profile-title">
-        <h3 id="employee-profile-title">Employee Profile</h3>
-        <p><strong>Name:</strong> John Doe</p>
-        <p><strong>Position:</strong> Software Engineer</p>
-        <p><strong>Department:</strong> IT</p>
-        <p><strong>Bank Account:</strong> 1234-5678-9012</p>
-      </div>
-    </section>
+  <script>
+    // API Base URL
+    const API_BASE = "http://localhost:4000/api"; // Replace with your deployed server URL
 
-    <!-- Reports and Analytics -->
-    <section id="reports">
-      <h2>Reports and Analytics</h2>
-      <button onclick="generateReport()">Generate Report</button>
-      <div id="report-output" role="region" aria-label="Generated Report"></div>
-    </section>
+    // Check System Status
+    async function checkStatus() {
+      const statusBar = document.getElementById("status-bar");
+      statusBar.className = "status-bar info"; // Reset class to info
+      statusBar.textContent = "Checking system status...";
 
-    <!-- Self-Service Portal -->
-    <section id="self-service">
-      <h2>Employee Self-Service Portal</h2>
-      <button onclick="viewPayslip()">View Payslip</button>
-      <button onclick="applyLeave()">Apply for Leave</button>
-      <div id="self-service-output" role="region" aria-label="Self-Service Output"></div>
-    </section>
-  </main>
+      try {
+        const response = await fetch(`${API_BASE}/status`);
+        const data = await response.json();
 
-  <footer>
-    <p>&copy; 2025 E-HRMS System. All rights reserved.</p>
-  </footer>
+        if (response.ok) {
+          statusBar.className = "status-bar success";
+          statusBar.textContent = `
+            Server: ${data.server}, Render: ${data.render}, MongoDB: ${data.mongo}, Overall: ${data.status}
+          `;
+        } else {
+          statusBar.className = "status-bar error";
+          statusBar.textContent = "Failed to fetch system status.";
+        }
+      } catch (error) {
+        statusBar.className = "status-bar error";
+        statusBar.textContent = `Error: ${error.message}`;
+      }
+    }
 
-  <script src="script.js"></script>
+    // Handle File Upload
+    document.getElementById("file-upload-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById("file-upload");
+      const uploadStatus = document.getElementById("upload-status");
+      uploadStatus.className = "status-bar info";
+      uploadStatus.textContent = "Uploading file...";
+
+      if (!fileInput.files.length) {
+        uploadStatus.className = "status-bar error";
+        uploadStatus.textContent = "Please select a file to upload.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      try {
+        const response = await fetch(`${API_BASE}/upload`, {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          uploadStatus.className = "status-bar success";
+          uploadStatus.textContent = `File uploaded successfully: ${data.filename}`;
+        } else {
+          uploadStatus.className = "status-bar error";
+          uploadStatus.textContent = `Failed to upload file: ${data.message}`;
+        }
+      } catch (error) {
+        uploadStatus.className = "status-bar error";
+        uploadStatus.textContent = `Error: ${error.message}`;
+      }
+    });
+
+    // Handle Test Record Submission
+    document.getElementById("test-record-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const recordStatus = document.getElementById("record-status");
+      recordStatus.className = "status-bar info";
+      recordStatus.textContent = "Submitting record...";
+
+      try {
+        const response = await fetch(`${API_BASE}/test-record`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          recordStatus.className = "status-bar success";
+          recordStatus.textContent = `Record created successfully: ${JSON.stringify(data.record)}`;
+        } else {
+          recordStatus.className = "status-bar error";
+          recordStatus.textContent = `Failed to create record: ${data.message}`;
+        }
+      } catch (error) {
+        recordStatus.className = "status-bar error";
+        recordStatus.textContent = `Error: ${error.message}`;
+      }
+    });
+  </script>
 </body>
 </html>
