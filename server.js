@@ -4,49 +4,46 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
+dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
 const app = express();
 
-// Middleware to parse JSON
+// Middleware
 app.use(express.json());
 
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error("Database connection failed:", error.message);
-    throw new Error("Database connection error");
+    process.exit(1); // Exit the process with failure
   }
 };
 
 // Route to Check MongoDB Status
-app.get("/api/db-status", async (req, res) => {
+app.get("/api/db-status", (req, res) => {
   const connectionStatus = mongoose.connection.readyState;
-  switch (connectionStatus) {
-    case 0:
-      res.status(500).json({ message: "MongoDB Disconnected" });
-      break;
-    case 1:
-      res.status(200).json({ message: "MongoDB Connected" });
-      break;
-    case 2:
-      res.status(503).json({ message: "MongoDB Connecting" });
-      break;
-    case 3:
-      res.status(500).json({ message: "MongoDB Disconnecting" });
-      break;
-    default:
-      res.status(500).json({ message: "Unknown MongoDB State" });
-  }
+  const statuses = {
+    0: "Disconnected",
+    1: "Connected",
+    2: "Connecting",
+    3: "Disconnecting",
+  };
+  const message = statuses[connectionStatus] || "Unknown State";
+  const statusCode = connectionStatus === 1 ? 200 : 500;
+  res.status(statusCode).json({ message });
 });
 
-// Basic API Routes for Attendance Management
-app.post("/api/clock-in", async (req, res) => {
+// Attendance Management API
+app.post("/api/clock-in", (req, res) => {
   try {
     const now = new Date();
     res.status(200).json({ status: "Clocked In", time: now.toLocaleTimeString() });
@@ -55,7 +52,7 @@ app.post("/api/clock-in", async (req, res) => {
   }
 });
 
-app.post("/api/clock-out", async (req, res) => {
+app.post("/api/clock-out", (req, res) => {
   try {
     const now = new Date();
     res.status(200).json({ status: "Clocked Out", time: now.toLocaleTimeString() });
@@ -65,11 +62,22 @@ app.post("/api/clock-out", async (req, res) => {
 });
 
 // Serve Static Files
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Serve index.html for the root URL
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// 404 Fallback for Undefined Routes
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 // Start the Server
