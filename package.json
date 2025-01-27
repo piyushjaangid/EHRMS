@@ -8,17 +8,24 @@
     "start": "node script.js",
     "dev": "nodemon script.js",
     "build-react": "react-scripts build",
-    "build-ts": "tsc"
+    "build-ts": "tsc",
+    "lint": "eslint .",
+    "test": "jest",
+    "clean": "rm -rf node_modules && npm install"
   },
   "keywords": ["backend", "express", "mongoose", "api"],
   "author": "Your Name",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mongoose": "^8.9.5"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
