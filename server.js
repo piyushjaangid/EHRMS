@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Enable CORS to allow requests from other origins
+// Enable CORS to allow cross-origin requests
 app.use(cors());
 
 // Setup Winston Logger
@@ -23,8 +23,8 @@ const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
     winston.format.timestamp(),
-    winston.format.printf(
-      ({ timestamp, level, message }) => `${timestamp} [${level.toUpperCase()}]: ${message}`
+    winston.format.printf(({ timestamp, level, message }) =>
+      `${timestamp} [${level.toUpperCase()}]: ${message}`
     )
   ),
   transports: [
