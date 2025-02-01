@@ -123,7 +123,10 @@
   </section>
 
   <script>
-    // Use the live Render endpoint for API requests
+    // Use one of the following based on where your front-end is hosted:
+    // Option A: If index.html is served from the same domain as your API:
+    // const API_BASE = "/api";
+    // Option B: If index.html is hosted on a different domain (e.g., GitHub Pages):
     const API_BASE = "https://ehrms.onrender.com/api";
 
     // Function to log messages in the terminal
