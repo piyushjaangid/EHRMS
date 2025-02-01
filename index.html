@@ -123,7 +123,7 @@
   </section>
 
   <script>
-    // Update API_BASE to point to your live Render endpoint
+    // Use the live Render endpoint for API requests
     const API_BASE = "https://ehrms.onrender.com/api";
 
     // Function to log messages in the terminal
@@ -134,7 +134,7 @@
       logLine.textContent = `[${timestamp}] ${message}`;
       logLine.classList.add(type);
       terminal.appendChild(logLine);
-      terminal.scrollTop = terminal.scrollHeight; // Auto-scroll to the bottom
+      terminal.scrollTop = terminal.scrollHeight;
     }
 
     // Check System Status
