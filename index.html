@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-HRMS - System Status and Test</title>
+  <title>E-HRMS - System Status and Testing</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body {
@@ -13,14 +13,12 @@
       padding: 20px;
       background-color: #f4f4f9;
     }
-
     header {
       background: #007bff;
       color: #fff;
       padding: 10px;
       text-align: center;
     }
-
     section {
       margin: 20px 0;
       padding: 20px;
@@ -28,7 +26,6 @@
       background: #fff;
       border-radius: 8px;
     }
-
     button {
       padding: 10px 15px;
       border: none;
@@ -37,36 +34,29 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     button:hover {
       background: #0056b3;
     }
-
     .status-bar {
       padding: 10px;
       margin: 10px 0;
       border-radius: 5px;
     }
-
     .success {
       background-color: #d4edda;
       color: #155724;
     }
-
     .error {
       background-color: #f8d7da;
       color: #721c24;
     }
-
     .info {
       background-color: #cce5ff;
       color: #004085;
     }
-
     .hidden {
       display: none;
     }
-
     /* Terminal styles */
     #terminal {
       margin-top: 20px;
@@ -79,15 +69,12 @@
       height: 200px;
       overflow-y: auto;
     }
-
     #terminal .error {
       color: red;
     }
-
     #terminal .info {
       color: cyan;
     }
-
     #terminal .success {
       color: green;
     }
@@ -98,7 +85,7 @@
     <h1>E-HRMS - System Status and Testing</h1>
   </header>
 
-  <!-- Status Bar -->
+  <!-- Status Check -->
   <section>
     <h2>Status Check</h2>
     <button onclick="checkStatus()">Check System Status</button>
@@ -129,14 +116,15 @@
     <div id="record-status" class="status-bar hidden"></div>
   </section>
 
-  <!-- Terminal -->
+  <!-- Terminal Logs -->
   <section>
     <h2>Terminal Logs</h2>
     <div id="terminal"></div>
   </section>
 
   <script>
-    const API_BASE = "https://ehrms.onrender.com/api"; // Replace with your deployed server URL
+    // Update API_BASE to point to your live Render endpoint
+    const API_BASE = "https://ehrms.onrender.com/api";
 
     // Function to log messages in the terminal
     function logToTerminal(message, type = "info") {
@@ -155,16 +143,12 @@
       statusBar.className = "status-bar info";
       statusBar.textContent = "Checking system status...";
       logToTerminal("Initiating system status check...");
-
       try {
         const response = await fetch(`${API_BASE}/status`);
         const data = await response.json();
-
         if (response.ok) {
           statusBar.className = "status-bar success";
-          statusBar.textContent = `
-            Server: ${data.server}, Render: ${data.render}, MongoDB: ${data.mongo}, Overall: ${data.status}
-          `;
+          statusBar.textContent = `Server: ${data.server}, Render: ${data.render}, MongoDB: ${data.mongo}, Overall: ${data.status}`;
           logToTerminal(`Status check successful: ${JSON.stringify(data)}`, "success");
         } else {
           statusBar.className = "status-bar error";
@@ -186,25 +170,20 @@
       uploadStatus.className = "status-bar info";
       uploadStatus.textContent = "Uploading file...";
       logToTerminal("File upload initiated...");
-
       if (!fileInput.files.length) {
         uploadStatus.className = "status-bar error";
         uploadStatus.textContent = "Please select a file to upload.";
         logToTerminal("File upload failed: No file selected.", "error");
         return;
       }
-
       const formData = new FormData();
       formData.append("file", fileInput.files[0]);
-
       try {
         const response = await fetch(`${API_BASE}/upload`, {
           method: "POST",
           body: formData,
         });
-
         const data = await response.json();
-
         if (response.ok) {
           uploadStatus.className = "status-bar success";
           uploadStatus.textContent = `File uploaded successfully: ${data.filename}`;
@@ -230,16 +209,13 @@
       recordStatus.className = "status-bar info";
       recordStatus.textContent = "Submitting record...";
       logToTerminal("Record submission initiated...");
-
       try {
         const response = await fetch(`${API_BASE}/test-record`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email }),
         });
-
         const data = await response.json();
-
         if (response.ok) {
           recordStatus.className = "status-bar success";
           recordStatus.textContent = `Record created successfully: ${JSON.stringify(data.record)}`;
