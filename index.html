@@ -97,13 +97,22 @@
       try {
         const response = await fetch(`${API_BASE}/records`);
         const data = await response.json();
-        if (response.ok) {
+        console.log("Fetched Records:", data);
+
+        if (response.ok && data.records) {
           const recordList = document.getElementById("record-list");
-          recordList.innerHTML = data.records.map(record => `<div>${record.name} - ${record.email}</div>`).join('');
+          if (data.records.length > 0) {
+            recordList.innerHTML = data.records
+              .map(record => `<div>${record.name} - ${record.email}</div>`)
+              .join('');
+          } else {
+            recordList.innerHTML = "No records found.";
+          }
         } else {
           document.getElementById("record-list").innerHTML = "Failed to load records.";
         }
       } catch (error) {
+        console.error("Error fetching records:", error);
         document.getElementById("record-list").innerHTML = `Error: ${error.message}`;
       }
     }
