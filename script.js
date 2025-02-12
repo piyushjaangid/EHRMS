@@ -1,16 +1,16 @@
-import express from "express";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import cors from "cors";
-import winston from "winston";
-import "winston-daily-rotate-file";
+import express from 'express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import winston from 'winston';
+import 'winston-daily-rotate-file';
 
 dotenv.config();
 const app = express();
 
 // Winston Logger Setup
 const logger = winston.createLogger({
-  level: "info",
+  level: 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.printf(
@@ -20,10 +20,10 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.Console(),
     new winston.transports.DailyRotateFile({
-      filename: "logs/server-%DATE%.log",
-      datePattern: "YYYY-MM-DD",
-      maxSize: "20m",
-      maxFiles: "14d",
+      filename: 'logs/server-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      maxSize: '20m',
+      maxFiles: '14d',
     }),
   ],
 });
@@ -46,37 +46,56 @@ const connectDB = async () => {
   }
 };
 
-// Basic Route
-app.get("/", (req, res) => {
-  logger.info("Root route accessed");
-  res.status(200).json({ message: "Server is running!" });
+// Mongoose Schema and Model for Records
+const recordSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
 });
 
-// Example API Endpoint for Employees
-app.get("/api/employees", (req, res) => {
+const Record = mongoose.model('Record', recordSchema);
+
+// Basic Route
+app.get('/', (req, res) => {
+  logger.info('Root route accessed');
+  res.status(200).json({ message: 'Server is running!' });
+});
+
+// POST Route to Create a New Record
+app.post('/api/test-record', async (req, res) => {
+  const { name, email } = req.body;
   try {
-    const employees = [
-      { name: "John Doe", position: "Software Engineer", department: "IT" },
-      { name: "Jane Smith", position: "HR Manager", department: "HR" },
-    ];
-    logger.info("Employees endpoint accessed");
-    res.status(200).json({ employees });
+    const newRecord = new Record({ name, email });
+    await newRecord.save();
+    logger.info(`New record created: ${name} - ${email}`);
+    res.status(201).json({ message: 'Record saved successfully!', record: newRecord });
   } catch (error) {
-    logger.error(`Error in /api/employees: ${error.message}`);
-    res.status(500).json({ error: "Failed to fetch employees" });
+    logger.error(`Error creating record: ${error.message}`);
+    res.status(500).json({ error: 'Failed to save record' });
+  }
+});
+
+// GET Route to Retrieve All Records
+app.get('/api/records', async (req, res) => {
+  try {
+    const records = await Record.find();
+    logger.info('Records retrieved');
+    res.status(200).json({ records });
+  } catch (error) {
+    logger.error(`Error retrieving records: ${error.message}`);
+    res.status(500).json({ error: 'Failed to load records' });
   }
 });
 
 // Fallback Route for Undefined Routes
 app.use((req, res, next) => {
   logger.warn(`404 Error - Route not found: ${req.originalUrl}`);
-  res.status(404).json({ error: "Route not found" });
+  res.status(404).json({ error: 'Route not found' });
 });
 
 // Global Error Handling Middleware
 app.use((err, req, res, next) => {
   logger.error(`Unhandled Error: ${err.message}`);
-  res.status(500).json({ error: "Internal Server Error" });
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
 // Start the Server
