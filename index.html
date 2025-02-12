@@ -66,6 +66,23 @@
       overflow-y: auto;
       border: 1px solid #ddd;
     }
+    #terminal {
+      background-color: black;
+      color: green;
+      font-family: monospace;
+      padding: 10px;
+      border-radius: 8px;
+      height: 200px;
+      overflow-y: auto;
+    }
+    #terminal-input {
+      width: 100%;
+      background: black;
+      color: green;
+      border: none;
+      font-family: monospace;
+      padding: 5px;
+    }
   </style>
 </head>
 <body>
@@ -90,6 +107,12 @@
     <div id="record-list">Loading records...</div>
   </section>
 
+  <section>
+    <h2>Command Terminal</h2>
+    <div id="terminal"></div>
+    <input type="text" id="terminal-input" placeholder="Enter command..." onkeypress="handleCommand(event)">
+  </section>
+
   <script>
     const API_BASE = "https://ehrms.onrender.com/api";
 
@@ -97,23 +120,29 @@
       try {
         const response = await fetch(`${API_BASE}/records`);
         const data = await response.json();
-        console.log("Fetched Records:", data);
-
         if (response.ok && data.records) {
           const recordList = document.getElementById("record-list");
-          if (data.records.length > 0) {
-            recordList.innerHTML = data.records
-              .map(record => `<div>${record.name} - ${record.email}</div>`)
-              .join('');
-          } else {
-            recordList.innerHTML = "No records found.";
-          }
+          recordList.innerHTML = data.records.length > 0 ? 
+            data.records.map(record => `<div>${record.name} - ${record.email}</div>`).join('') : 
+            "No records found.";
         } else {
           document.getElementById("record-list").innerHTML = "Failed to load records.";
         }
       } catch (error) {
-        console.error("Error fetching records:", error);
         document.getElementById("record-list").innerHTML = `Error: ${error.message}`;
+      }
+    }
+
+    function handleCommand(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const input = document.getElementById("terminal-input");
+        const command = input.value.trim();
+        const terminal = document.getElementById("terminal");
+        if (command) {
+          terminal.innerHTML += `<div>> ${command}</div>`;
+          input.value = "";
+        }
       }
     }
 
