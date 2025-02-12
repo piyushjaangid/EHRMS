@@ -57,26 +57,14 @@
     .hidden {
       display: none;
     }
-    /* Terminal styles */
-    #terminal {
+    #record-list {
       margin-top: 20px;
-      background-color: #000;
-      color: #0f0;
-      font-family: monospace;
-      font-size: 14px;
       padding: 10px;
+      background: #fff;
       border-radius: 8px;
-      height: 200px;
+      max-height: 200px;
       overflow-y: auto;
-    }
-    #terminal .error {
-      color: red;
-    }
-    #terminal .info {
-      color: cyan;
-    }
-    #terminal .success {
-      color: green;
+      border: 1px solid #ddd;
     }
   </style>
 </head>
@@ -85,25 +73,6 @@
     <h1>E-HRMS - System Status and Testing</h1>
   </header>
 
-  <!-- Status Check -->
-  <section>
-    <h2>Status Check</h2>
-    <button onclick="checkStatus()">Check System Status</button>
-    <div id="status-bar" class="status-bar hidden"></div>
-  </section>
-
-  <!-- File Upload -->
-  <section>
-    <h2>File Upload</h2>
-    <form id="file-upload-form" enctype="multipart/form-data">
-      <label for="file-upload">Choose a file to upload:</label>
-      <input type="file" id="file-upload" name="file" accept=".csv, .xlsx, .txt"><br><br>
-      <button type="submit">Upload File</button>
-    </form>
-    <div id="upload-status" class="status-bar hidden"></div>
-  </section>
-
-  <!-- Test Record Submission -->
   <section>
     <h2>Submit a Test Record</h2>
     <form id="test-record-form">
@@ -111,129 +80,63 @@
       <input type="text" id="name" name="name" required><br><br>
       <label for="email">Email:</label>
       <input type="email" id="email" name="email" required><br><br>
-      <button type="submit">Submit Record</button>
+      <button type="submit">Save to Server</button>
     </form>
     <div id="record-status" class="status-bar hidden"></div>
   </section>
 
-  <!-- Terminal Logs -->
   <section>
-    <h2>Terminal Logs</h2>
-    <div id="terminal"></div>
+    <h2>Current Records</h2>
+    <div id="record-list">Loading records...</div>
   </section>
 
   <script>
-    // Use one of the following based on where your front-end is hosted:
-    // Option A: If index.html is served from the same domain as your API:
-    // const API_BASE = "/api";
-    // Option B: If index.html is hosted on a different domain (e.g., GitHub Pages):
     const API_BASE = "https://ehrms.onrender.com/api";
 
-    // Function to log messages in the terminal
-    function logToTerminal(message, type = "info") {
-      const terminal = document.getElementById("terminal");
-      const logLine = document.createElement("div");
-      const timestamp = new Date().toLocaleTimeString();
-      logLine.textContent = `[${timestamp}] ${message}`;
-      logLine.classList.add(type);
-      terminal.appendChild(logLine);
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-
-    // Check System Status
-    async function checkStatus() {
-      const statusBar = document.getElementById("status-bar");
-      statusBar.className = "status-bar info";
-      statusBar.textContent = "Checking system status...";
-      logToTerminal("Initiating system status check...");
+    async function fetchRecords() {
       try {
-        const response = await fetch(`${API_BASE}/status`);
+        const response = await fetch(`${API_BASE}/records`);
         const data = await response.json();
         if (response.ok) {
-          statusBar.className = "status-bar success";
-          statusBar.textContent = `Server: ${data.server}, Render: ${data.render}, MongoDB: ${data.mongo}, Overall: ${data.status}`;
-          logToTerminal(`Status check successful: ${JSON.stringify(data)}`, "success");
+          const recordList = document.getElementById("record-list");
+          recordList.innerHTML = data.records.map(record => `<div>${record.name} - ${record.email}</div>`).join('');
         } else {
-          statusBar.className = "status-bar error";
-          statusBar.textContent = "Failed to fetch system status.";
-          logToTerminal("Status check failed: Unable to fetch data.", "error");
+          document.getElementById("record-list").innerHTML = "Failed to load records.";
         }
       } catch (error) {
-        statusBar.className = "status-bar error";
-        statusBar.textContent = `Error: ${error.message}`;
-        logToTerminal(`Status check failed: ${error.message}`, "error");
+        document.getElementById("record-list").innerHTML = `Error: ${error.message}`;
       }
     }
 
-    // Handle File Upload
-    document.getElementById("file-upload-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const fileInput = document.getElementById("file-upload");
-      const uploadStatus = document.getElementById("upload-status");
-      uploadStatus.className = "status-bar info";
-      uploadStatus.textContent = "Uploading file...";
-      logToTerminal("File upload initiated...");
-      if (!fileInput.files.length) {
-        uploadStatus.className = "status-bar error";
-        uploadStatus.textContent = "Please select a file to upload.";
-        logToTerminal("File upload failed: No file selected.", "error");
-        return;
-      }
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-      try {
-        const response = await fetch(`${API_BASE}/upload`, {
-          method: "POST",
-          body: formData,
-        });
-        const data = await response.json();
-        if (response.ok) {
-          uploadStatus.className = "status-bar success";
-          uploadStatus.textContent = `File uploaded successfully: ${data.filename}`;
-          logToTerminal(`File uploaded successfully: ${data.filename}`, "success");
-        } else {
-          uploadStatus.className = "status-bar error";
-          uploadStatus.textContent = `Failed to upload file: ${data.message}`;
-          logToTerminal(`File upload failed: ${data.message}`, "error");
-        }
-      } catch (error) {
-        uploadStatus.className = "status-bar error";
-        uploadStatus.textContent = `Error: ${error.message}`;
-        logToTerminal(`File upload failed: ${error.message}`, "error");
-      }
-    });
-
-    // Handle Test Record Submission
     document.getElementById("test-record-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("name").value;
       const email = document.getElementById("email").value;
       const recordStatus = document.getElementById("record-status");
       recordStatus.className = "status-bar info";
-      recordStatus.textContent = "Submitting record...";
-      logToTerminal("Record submission initiated...");
+      recordStatus.textContent = "Saving record...";
       try {
         const response = await fetch(`${API_BASE}/test-record`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email }),
+          body: JSON.stringify({ name, email })
         });
         const data = await response.json();
         if (response.ok) {
           recordStatus.className = "status-bar success";
-          recordStatus.textContent = `Record created successfully: ${JSON.stringify(data.record)}`;
-          logToTerminal(`Record submitted successfully: ${JSON.stringify(data.record)}`, "success");
+          recordStatus.textContent = "Record saved successfully!";
+          fetchRecords();
         } else {
           recordStatus.className = "status-bar error";
-          recordStatus.textContent = `Failed to create record: ${data.message}`;
-          logToTerminal(`Record submission failed: ${data.message}`, "error");
+          recordStatus.textContent = `Failed to save record: ${data.message}`;
         }
       } catch (error) {
         recordStatus.className = "status-bar error";
         recordStatus.textContent = `Error: ${error.message}`;
-        logToTerminal(`Record submission failed: ${error.message}`, "error");
       }
     });
+
+    fetchRecords();
   </script>
 </body>
 </html>
