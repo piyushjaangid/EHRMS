@@ -54,6 +54,20 @@ const recordSchema = new mongoose.Schema({
 
 const Record = mongoose.model('Record', recordSchema);
 
+// Ensure Database Connection Before Handling Requests
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      await connectDB();
+      next();
+    } catch (error) {
+      return res.status(500).json({ error: 'Database connection error' });
+    }
+  } else {
+    next();
+  }
+});
+
 // Basic Route
 app.get('/', (req, res) => {
   logger.info('Root route accessed');
