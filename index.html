@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>E-HRMS - System Status and Testing</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -97,7 +97,6 @@
       try {
         const response = await fetch(`${API_BASE}/records`);
         const data = await response.json();
-        console.log("Fetched Records:", data);
 
         if (response.ok && data.records) {
           const recordList = document.getElementById("record-list");
@@ -124,6 +123,7 @@
       const recordStatus = document.getElementById("record-status");
       recordStatus.className = "status-bar info";
       recordStatus.textContent = "Saving record...";
+      recordStatus.classList.remove("hidden");
       try {
         const response = await fetch(`${API_BASE}/test-record`, {
           method: "POST",
