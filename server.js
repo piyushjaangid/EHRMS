@@ -15,8 +15,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Enable CORS to allow cross-origin requests
-app.use(cors());
+// Enable CORS with specific options
+app.use(cors({ origin: "*", methods: "GET,POST", allowedHeaders: "Content-Type" }));
 
 // Setup Winston Logger
 const logger = winston.createLogger({
@@ -47,91 +47,81 @@ const upload = multer({ dest: "uploads/" });
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    logger.info(`MongoDB Connected: ${conn.connection.host}`);
+    await mongoose.connect(process.env.MONGO_URI);
+    logger.info(`MongoDB Connected`);
   } catch (error) {
     logger.error(`MongoDB Connection Failed: ${error.message}`);
     process.exit(1);
   }
 };
 
-// Define a sample Mongoose schema and model for test records
-const SampleSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true }
+// Define a Mongoose schema and model
+const RecordSchema = new mongoose.Schema({
+  text: { type: String, required: true }
 });
-const SampleModel = mongoose.model("Sample", SampleSchema);
+const RecordModel = mongoose.model("Record", RecordSchema);
 
 // Health Check Endpoint
 app.get("/api/status", (req, res) => {
   const mongoStatus = mongoose.connection.readyState;
   const renderStatus = "Render service is running";
-  const statusMessages = {
-    0: "MongoDB Disconnected",
-    1: "MongoDB Connected",
-    2: "MongoDB Connecting",
-    3: "MongoDB Disconnecting"
-  };
-  const mongoMessage = statusMessages[mongoStatus] || "Unknown MongoDB State";
-  const allSystemsOperational = mongoStatus === 1 ? "All systems are operational" : "Issues detected";
+  const statusMessages = ["Disconnected", "Connected", "Connecting", "Disconnecting"];
   logger.info("Status endpoint accessed");
   res.status(200).json({
     server: "Server is running",
     render: renderStatus,
-    mongo: mongoMessage,
-    status: allSystemsOperational
+    mongo: statusMessages[mongoStatus] || "Unknown",
+    status: mongoStatus === 1 ? "All systems operational" : "Issues detected"
   });
 });
 
-// Test Record Creation Endpoint
-app.post("/api/test-record", async (req, res) => {
+// Create a new record
+app.post("/api/save", async (req, res) => {
   try {
-    const { name, email } = req.body;
-    if (!name || !email) {
-      logger.warn("Test record creation failed: Missing name or email");
-      return res.status(400).json({ message: "Name and email are required" });
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: "Text is required" });
     }
-    const newRecord = new SampleModel({ name, email });
+    const newRecord = new RecordModel({ text });
     await newRecord.save();
-    logger.info("Test record created successfully");
-    res.status(201).json({
-      message: "Record created successfully",
-      record: newRecord
-    });
+    logger.info("Record saved successfully");
+    res.status(201).json({ message: "Saved successfully", record: newRecord });
   } catch (error) {
-    logger.error(`Error creating record: ${error.message}`);
-    res.status(500).json({
-      message: "Failed to create record",
-      error: error.message
-    });
+    logger.error(`Error saving record: ${error.message}`);
+    res.status(500).json({ error: "Failed to save record" });
+  }
+});
+
+// Fetch all records
+app.get("/api/records", async (req, res) => {
+  try {
+    const records = await RecordModel.find().sort({ createdAt: -1 });
+    res.json(records);
+  } catch (error) {
+    logger.error(`Error fetching records: ${error.message}`);
+    res.status(500).json({ error: "Failed to fetch records" });
   }
 });
 
 // File Upload Endpoint
 app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) {
-    logger.warn("File upload failed: No file provided");
     return res.status(400).json({ message: "No file uploaded" });
   }
   logger.info(`File uploaded: ${req.file.filename}`);
   res.status(200).json({ filename: req.file.filename });
 });
 
-// Serve static files from the "public" directory (including index.html)
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static files
+app.use(express.static(path.join(process.cwd(), "public")));
 
 // Serve index.html for the root URL
 app.get("/", (req, res) => {
-  logger.info("Root endpoint accessed");
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
 
-// 404 Fallback for Undefined Routes
+// 404 Fallback
 app.use((req, res) => {
-  logger.warn(`404 Error - Route not found: ${req.originalUrl}`);
   res.status(404).json({ error: "Route not found" });
 });
 
@@ -144,11 +134,6 @@ app.use((err, req, res, next) => {
 // Start the Server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, async () => {
-  try {
-    await connectDB();
-    logger.info(`Server running at http://localhost:${PORT}`);
-  } catch (error) {
-    logger.error(`Server startup error: ${error.message}`);
-    process.exit(1);
-  }
+  await connectDB();
+  logger.info(`Server running at http://localhost:${PORT}`);
 });
