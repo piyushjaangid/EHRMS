@@ -120,3 +120,156 @@ document.body.innerHTML = `
     <div id="terminal-log" style="overflow-y: auto; max-height: 150px;"></div>
   </div>
 `;
+index.html:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-HRMS - System Status and Testing</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+    header {
+      background: #007bff;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+    section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      background: #007bff;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .status-bar {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .info {
+      background-color: #cce5ff;
+      color: #004085;
+    }
+    .hidden {
+      display: none;
+    }
+    #record-list {
+      margin-top: 20px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>E-HRMS - System Status and Testing</h1>
+  </header>
+
+  <section>
+    <h2>Submit a Test Record</h2>
+    <form id="test-record-form">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required><br><br>
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required><br><br>
+      <button type="submit">Save to Server</button>
+    </form>
+    <div id="record-status" class="status-bar hidden"></div>
+  </section>
+
+  <section>
+    <h2>Current Records</h2>
+    <div id="record-list">Loading records...</div>
+  </section>
+
+  <script>
+    const API_BASE = "https://ehrms.onrender.com/api";
+
+    async function fetchRecords() {
+      try {
+        const response = await fetch(`${API_BASE}/records`);
+        const data = await response.json();
+        console.log("Fetched Records:", data);
+
+        if (response.ok && data.records) {
+          const recordList = document.getElementById("record-list");
+          if (data.records.length > 0) {
+            recordList.innerHTML = data.records
+              .map(record => `<div>${record.name} - ${record.email}</div>`)
+              .join('');
+          } else {
+            recordList.innerHTML = "No records found.";
+          }
+        } else {
+          document.getElementById("record-list").innerHTML = "Failed to load records.";
+        }
+      } catch (error) {
+        console.error("Error fetching records:", error);
+        document.getElementById("record-list").innerHTML = `Error: ${error.message}`;
+      }
+    }
+
+    document.getElementById("test-record-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const recordStatus = document.getElementById("record-status");
+      recordStatus.className = "status-bar info";
+      recordStatus.textContent = "Saving record...";
+      try {
+        const response = await fetch(`${API_BASE}/test-record`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          recordStatus.className = "status-bar success";
+          recordStatus.textContent = "Record saved successfully!";
+          fetchRecords();
+        } else {
+          recordStatus.className = "status-bar error";
+          recordStatus.textContent = `Failed to save record: ${data.message}`;
+        }
+      } catch (error) {
+        recordStatus.className = "status-bar error";
+        recordStatus.textContent = `Error: ${error.message}`;
+      }
+    });
+
+    fetchRecords();
+  </script>
+</body>
+</html>
+
