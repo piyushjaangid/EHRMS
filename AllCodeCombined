@@ -267,7 +267,30 @@ index.html:
         recordStatus.textContent = `Error: ${error.message}`;
       }
     });
-
+package.json:
+{
+  "name": "ehrms-backend",
+  "version": "1.0.0",
+  "description": "Backend server for EHRMS",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "multer": "^1.4.5-lts.1",
+    "winston": "^3.8.1",
+    "winston-daily-rotate-file": "^4.7.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
     fetchRecords();
   </script>
 </body>
