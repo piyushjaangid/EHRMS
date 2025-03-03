@@ -115,9 +115,9 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
 // **Fix: Serve Static Files from the Correct Directory**
 app.use(express.static(path.join(__dirname, "public")));
 
-// **Fix: Correctly Serve index.html**
+// **Fix: Correctly Serve index1.html**
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index1.html"));
 });
 
 // 404 Fallback
