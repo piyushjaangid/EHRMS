@@ -113,11 +113,11 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
 });
 
 // Serve static files
-app.use(express.static(path.join(process.cwd(), "public")));
+app.use(express.static(path.join(process.cwd(), "main")));
 
 // Serve index.html for the root URL
 app.get("/", (req, res) => {
-  res.sendFile(path.join(process.cwd(), "public", "index.html"));
+  res.sendFile(path.join(process.cwd(), "main", "index.html"));
 });
 
 // 404 Fallback
