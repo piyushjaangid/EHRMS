@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>E-HRMS - System Status and Testing</title>
-  <link rel="stylesheet" href="style.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,10 +36,17 @@
     button:hover {
       background: #0056b3;
     }
+    input {
+      padding: 8px;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
     .status-bar {
       padding: 10px;
-      margin: 10px 0;
+      margin-top: 15px;
       border-radius: 5px;
+      font-weight: bold;
     }
     .success {
       background-color: #d4edda;
@@ -62,9 +68,13 @@
       padding: 10px;
       background: #fff;
       border-radius: 8px;
-      max-height: 200px;
+      max-height: 250px;
       overflow-y: auto;
       border: 1px solid #ddd;
+    }
+    .record-entry {
+      padding: 5px;
+      border-bottom: 1px solid #eee;
     }
   </style>
 </head>
@@ -77,74 +87,90 @@
     <h2>Submit a Test Record</h2>
     <form id="test-record-form">
       <label for="name">Name:</label>
-      <input type="text" id="name" name="name" required><br><br>
+      <input type="text" id="name" name="name" placeholder="Enter name" required />
+
       <label for="email">Email:</label>
-      <input type="email" id="email" name="email" required><br><br>
+      <input type="email" id="email" name="email" placeholder="Enter email" required />
+
       <button type="submit">Save to Server</button>
     </form>
-    <div id="record-status" class="status-bar hidden"></div>
+    <div id="record-status" class="status-bar hidden">Status: Waiting for input</div>
   </section>
 
   <section>
     <h2>Current Records</h2>
     <div id="record-list">Loading records...</div>
+    <button onclick="fetchRecords()">Refresh Records</button>
   </section>
 
   <script>
     const API_BASE = "https://ehrms.onrender.com/api";
 
+    // Fetch existing records
     async function fetchRecords() {
+      const recordList = document.getElementById("record-list");
+      recordList.innerHTML = "Loading records...";
+
       try {
         const response = await fetch(`${API_BASE}/records`);
         const data = await response.json();
-        console.log("Fetched Records:", data);
 
-        if (response.ok && data.records) {
-          const recordList = document.getElementById("record-list");
-          if (data.records.length > 0) {
-            recordList.innerHTML = data.records
-              .map(record => `<div>${record.name} - ${record.email}</div>`)
-              .join('');
-          } else {
-            recordList.innerHTML = "No records found.";
-          }
+        if (response.ok && data.records && data.records.length > 0) {
+          recordList.innerHTML = data.records.map(r =>
+            `<div class="record-entry">${r.name} - ${r.email}</div>`
+          ).join('');
+        } else if (data.records && data.records.length === 0) {
+          recordList.innerHTML = "No records found.";
         } else {
-          document.getElementById("record-list").innerHTML = "Failed to load records.";
+          throw new Error(data.message || "Unable to fetch records.");
         }
       } catch (error) {
         console.error("Error fetching records:", error);
-        document.getElementById("record-list").innerHTML = `Error: ${error.message}`;
+        recordList.innerHTML = `<span class="error">Error: ${error.message}</span>`;
       }
     }
 
+    // Handle form submission
     document.getElementById("test-record-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const recordStatus = document.getElementById("record-status");
-      recordStatus.className = "status-bar info";
-      recordStatus.textContent = "Saving record...";
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const statusDiv = document.getElementById("record-status");
+
+      if (!name || !email) {
+        statusDiv.className = "status-bar error";
+        statusDiv.textContent = "Name and Email are required.";
+        return;
+      }
+
+      statusDiv.className = "status-bar info";
+      statusDiv.textContent = "Saving record...";
+
       try {
         const response = await fetch(`${API_BASE}/test-record`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email })
         });
+
         const data = await response.json();
+
         if (response.ok) {
-          recordStatus.className = "status-bar success";
-          recordStatus.textContent = "Record saved successfully!";
+          statusDiv.className = "status-bar success";
+          statusDiv.textContent = "Record saved successfully!";
           fetchRecords();
+          document.getElementById("test-record-form").reset();
         } else {
-          recordStatus.className = "status-bar error";
-          recordStatus.textContent = `Failed to save record: ${data.message}`;
+          statusDiv.className = "status-bar error";
+          statusDiv.textContent = `Failed to save record: ${data.message}`;
         }
       } catch (error) {
-        recordStatus.className = "status-bar error";
-        recordStatus.textContent = `Error: ${error.message}`;
+        statusDiv.className = "status-bar error";
+        statusDiv.textContent = `Error: ${error.message}`;
       }
     });
 
+    // Initial load
     fetchRecords();
   </script>
 </body>
