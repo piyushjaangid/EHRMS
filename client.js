@@ -1,4 +1,4 @@
-// Utility: Terminal Log Function
+// Utility: Append message to Terminal Log
 function logToTerminal(message, isError = false) {
   const terminalLog = document.getElementById("terminal-log");
   const line = document.createElement("div");
@@ -8,10 +8,10 @@ function logToTerminal(message, isError = false) {
   line.style.color = isError ? "red" : "green";
 
   terminalLog.appendChild(line);
-  terminalLog.scrollTop = terminalLog.scrollHeight; // Auto-scroll to the latest log
+  terminalLog.scrollTop = terminalLog.scrollHeight;
 }
 
-// Attendance Management
+// Attendance Actions
 function clockIn() {
   try {
     const now = new Date();
@@ -34,43 +34,39 @@ function clockOut() {
   }
 }
 
-// Leave Management
-document.getElementById("leave-form").addEventListener("submit", (event) => {
-  event.preventDefault(); // Prevent page reload
+// Leave Form Submission
+function handleLeaveSubmission(event) {
+  event.preventDefault();
 
-  try {
-    const leaveType = document.getElementById("leave-type").value;
-    const leaveStart = document.getElementById("leave-start").value;
-    const leaveEnd = document.getElementById("leave-end").value;
+  const leaveType = document.getElementById("leave-type").value;
+  const leaveStart = document.getElementById("leave-start").value;
+  const leaveEnd = document.getElementById("leave-end").value;
 
-    // Validate inputs
-    if (!leaveType || !leaveStart || !leaveEnd) {
-      const error = "Please fill out all fields before submitting.";
-      document.getElementById("leave-status").textContent = error;
-      logToTerminal(error, true);
-      return;
-    }
+  const leaveStatus = document.getElementById("leave-status");
 
-    const startDate = new Date(leaveStart);
-    const endDate = new Date(leaveEnd);
-
-    if (startDate > endDate) {
-      const error = "Leave start date cannot be after the end date.";
-      document.getElementById("leave-status").textContent = error;
-      logToTerminal(error, true);
-      return;
-    }
-
-    // Display confirmation message
-    const success = `Leave application submitted for ${leaveType} from ${leaveStart} to ${leaveEnd}.`;
-    document.getElementById("leave-status").textContent = success;
-    logToTerminal(success);
-  } catch (error) {
-    logToTerminal("Failed to submit leave application: " + error.message, true);
+  if (!leaveType || !leaveStart || !leaveEnd) {
+    const errorMsg = "Please fill out all fields before submitting.";
+    leaveStatus.textContent = errorMsg;
+    logToTerminal(errorMsg, true);
+    return;
   }
-});
 
-// Utility: Reset attendance or leave status
+  const startDate = new Date(leaveStart);
+  const endDate = new Date(leaveEnd);
+
+  if (startDate > endDate) {
+    const errorMsg = "Leave start date cannot be after the end date.";
+    leaveStatus.textContent = errorMsg;
+    logToTerminal(errorMsg, true);
+    return;
+  }
+
+  const successMsg = `Leave application submitted for ${leaveType} from ${leaveStart} to ${leaveEnd}.`;
+  leaveStatus.textContent = successMsg;
+  logToTerminal(successMsg);
+}
+
+// Status Reset
 function resetStatus() {
   try {
     document.getElementById("attendance-status").textContent = "";
@@ -81,20 +77,24 @@ function resetStatus() {
   }
 }
 
-// Example DOM elements for testing
+// Initialize DOM elements and event listeners
 document.body.innerHTML = `
-  <div>
+  <header style="background:#007bff; color:#fff; padding:10px; text-align:center;">
+    <h1>E-HRMS - Attendance & Leave Portal</h1>
+  </header>
+
+  <section style="margin:20px 0; padding:20px; background:#fff; border:1px solid #ddd; border-radius:8px;">
     <h2>Attendance Management</h2>
     <button onclick="clockIn()">Clock In</button>
     <button onclick="clockOut()">Clock Out</button>
     <p id="attendance-status"></p>
-  </div>
+  </section>
 
-  <div>
+  <section style="margin:20px 0; padding:20px; background:#fff; border:1px solid #ddd; border-radius:8px;">
     <h2>Leave Management</h2>
     <form id="leave-form">
       <label for="leave-type">Leave Type:</label>
-      <select id="leave-type">
+      <select id="leave-type" required>
         <option value="">--Select Leave Type--</option>
         <option value="Casual Leave">Casual Leave</option>
         <option value="Sick Leave">Sick Leave</option>
@@ -102,20 +102,25 @@ document.body.innerHTML = `
       </select><br><br>
 
       <label for="leave-start">Leave Start Date:</label>
-      <input type="date" id="leave-start"><br><br>
+      <input type="date" id="leave-start" required><br><br>
 
       <label for="leave-end">Leave End Date:</label>
-      <input type="date" id="leave-end"><br><br>
+      <input type="date" id="leave-end" required><br><br>
 
       <button type="submit">Submit Leave Application</button>
     </form>
     <p id="leave-status"></p>
-  </div>
+  </section>
 
-  <button onclick="resetStatus()">Reset Status</button>
+  <section style="text-align:center; margin-top:10px;">
+    <button onclick="resetStatus()">Reset Status</button>
+  </section>
 
-  <div id="terminal" style="margin-top: 20px; background-color: black; color: white; font-family: monospace; padding: 10px; height: 200px; overflow-y: auto;">
-    <h3>Terminal Logs</h3>
-    <div id="terminal-log" style="overflow-y: auto; max-height: 150px;"></div>
-  </div>
+  <section style="margin-top:20px; padding:10px; background:#000; color:#fff; font-family:monospace; border-radius:8px;">
+    <h3 style="margin-top:0;">Terminal Logs</h3>
+    <div id="terminal-log" style="max-height:150px; overflow-y:auto;"></div>
+  </section>
 `;
+
+// Register event listeners
+document.getElementById("leave-form").addEventListener("submit", handleLeaveSubmission);
