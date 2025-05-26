@@ -16,9 +16,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Enable CORS
-app.use(cors({ origin: "*", methods: "GET,POST", allowedHeaders: "Content-Type" }));
+app.use(cors({ origin: "*", methods: ["GET", "POST"], allowedHeaders: ["Content-Type"] }));
 
-// Setup Logger
+// Logger Setup
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
@@ -41,35 +41,37 @@ const logger = winston.createLogger({
 // Middleware
 app.use(express.json());
 
-// Configure Multer for File Uploads
+// Multer File Upload Config
 const upload = multer({ dest: "uploads/" });
 
 // MongoDB Connection
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    logger.info(`MongoDB Connected`);
+    logger.info(`✅ MongoDB Connected`);
   } catch (error) {
-    logger.error(`MongoDB Connection Failed: ${error.message}`);
+    logger.error(`❌ MongoDB Connection Failed: ${error.message}`);
     process.exit(1);
   }
 };
 
 // Mongoose Schema
 const RecordSchema = new mongoose.Schema({
-  text: { type: String, required: true }
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
 });
 const RecordModel = mongoose.model("Record", RecordSchema);
+
+// Routes
 
 // Health Check
 app.get("/api/status", (req, res) => {
   const mongoStatus = mongoose.connection.readyState;
-  const renderStatus = "Render service is running";
   const statusMessages = ["Disconnected", "Connected", "Connecting", "Disconnecting"];
   logger.info("Status endpoint accessed");
   res.status(200).json({
     server: "Server is running",
-    render: renderStatus,
+    render: "Render service is running",
     mongo: statusMessages[mongoStatus] || "Unknown",
     status: mongoStatus === 1 ? "All systems operational" : "Issues detected"
   });
@@ -79,15 +81,15 @@ app.get("/api/status", (req, res) => {
 app.post("/api/save", async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) {
-      return res.status(400).json({ message: "Text is required" });
-    }
+    if (!text) return res.status(400).json({ message: "Text is required" });
+
     const newRecord = new RecordModel({ text });
     await newRecord.save();
-    logger.info("Record saved successfully");
+
+    logger.info("✅ Record saved successfully");
     res.status(201).json({ message: "Saved successfully", record: newRecord });
   } catch (error) {
-    logger.error(`Error saving record: ${error.message}`);
+    logger.error(`❌ Error saving record: ${error.message}`);
     res.status(500).json({ error: "Failed to save record" });
   }
 });
@@ -96,38 +98,37 @@ app.post("/api/save", async (req, res) => {
 app.get("/api/records", async (req, res) => {
   try {
     const records = await RecordModel.find().sort({ createdAt: -1 });
-    res.json(records);
+    res.status(200).json(records);
   } catch (error) {
-    logger.error(`Error fetching records: ${error.message}`);
+    logger.error(`❌ Error fetching records: ${error.message}`);
     res.status(500).json({ error: "Failed to fetch records" });
   }
 });
 
 // File Upload
 app.post("/api/upload", upload.single("file"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-  logger.info(`File uploaded: ${req.file.filename}`);
+  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+
+  logger.info(`✅ File uploaded: ${req.file.originalname}`);
   res.status(200).json({ filename: req.file.filename });
 });
 
-// **Fix: Serve Static Files from the Correct Directory**
+// Static File Serving
 app.use(express.static(path.join(__dirname, "public")));
 
-// **Fix: Correctly Serve index1.html**
+// Home Route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index1.html"));
 });
 
-// 404 Fallback
+// 404 Handler
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Error Handler
+// Global Error Handler
 app.use((err, req, res, next) => {
-  logger.error(`Unhandled Error: ${err.message}`);
+  logger.error(`🔥 Unhandled Error: ${err.message}`);
   res.status(500).json({ error: "Internal Server Error" });
 });
 
@@ -135,5 +136,8 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, async () => {
   await connectDB();
-  logger.info(`Server running at http://localhost:${PORT}`);
+  logger.info(`🚀 Server running at http://localhost:${PORT}`);
 });
+
+// Optional: Export for testing
+export default app;
